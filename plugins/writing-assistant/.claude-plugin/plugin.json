@@ -1,0 +1,17 @@
+{
+  "name": "writing-assistant",
+  "description": "Provides writing assistance for writing workflows including a special co-author agent for fiction. The project also includes manuscript management, grammar checking, and research tools",
+  "version": "0.0.11",
+  "author": {
+    "name": "Will Strye"
+  },
+  "keywords": [
+    "writing",
+    "fiction",
+    "co-writer",
+    "creative-writing",
+    "manuscript",
+    "editing"
+  ],
+  "license": "MIT"
+}

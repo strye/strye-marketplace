@@ -1,0 +1,10 @@
+{
+  "name": "integrated-design-spec",
+  "description": "A comprehensive spec-driven development (SDD) plugin with three-tier specification hierarchy (Epic, Feature, User Story) and intelligent agents for architecture review and validation",
+  "version": "0.0.1",
+  "author": {
+    "name": "Will Strye"
+  },
+  "commandNamespace": "specid.",
+  "commandNamespaceRationale": "Portmanteau of 'spec' (domain) and 'id' (Integrated Design) for clear distinction from other spec tools while remaining self-documenting and easy to type"
+}

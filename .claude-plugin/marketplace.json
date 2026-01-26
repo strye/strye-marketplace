@@ -1,0 +1,24 @@
+{
+  "name": "strye-tools",
+  "owner": {
+    "name": "Will Strye",
+    "email": "will@strye.info"
+  },
+  "plugins": [
+    {
+      "name": "writing-assistant",
+      "source": "./plugins/writing-assistant",
+      "description": "Provides writing assistance for writing workflows including a special co-author agent for fiction. The project also includes manuscript management, grammar checking, and research tools"
+    },
+    {
+      "name": "integrated-design-spec",
+      "source": "./plugins/integrated-design-spec",
+      "description": "A comprehensive spec-driven development (SDD) plugin with three-tier specification hierarchy (Epic, Feature, User Story) and intelligent agents for architecture review and validation"
+    },
+    {
+      "name": "content-creator",
+      "source": "./plugins/content-creator",
+	  "description": "A set of tools to help make better professional content"
+    }
+  ]
+}
