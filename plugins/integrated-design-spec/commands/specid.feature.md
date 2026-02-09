@@ -1,419 +1,881 @@
-# /spec.feature - Create or Update Feature Requirements
+# /specid.feature - Create or Refine Feature
 
-You are executing the `/spec.feature` command to create or update feature requirements using EARS notation (Easy Approach to Requirements Syntax).
+You are executing the `/specid.feature` command to create or refine a feature document with requirements using EARS notation.
 
 ## Command Arguments
 
-- **name**: Feature name in kebab-case (required)
-- **text**: Feature description and guidance (required)
+- **name**: Feature identifier (e.g., "FEAT-001") or name for new features (optional)
+- **text**: Feature description (optional)
+- **--epic**: Epic ID to link this feature to (e.g., "EPIC-001") (optional)
 
 ## Command Purpose
 
-Create or update feature requirements in `docs/features/[name]/requirements.md`:
-- Define user stories with "As a / I want to / So that" format
-- Generate acceptance criteria using EARS notation (WHEN/WHILE/IF/THEN/SHALL)
-- Number criteria sequentially for traceability
-- Include edge cases and error handling
-- Validate against quality standards
+Features represent specific capabilities made up of user stories. This command helps you:
+- Create new features (with automatic FEAT-NNN numbering)
+- Link features to epics (optional - epics not required for small projects)
+- Build out user stories collaboratively through conversation
+- Generate acceptance criteria using EARS notation
+- Ensure quality and traceability
+
+**Philosophy**: This command is conversational and collaborative. The system asks probing questions to help you think through requirements, then **suggests** stories and criteria for your review and refinement.
 
 ## Execution Steps
 
-### Step 1: Parse and Validate Arguments
-
-Extract and validate the feature name and description:
+### Step 1: Determine Mode and Context
 
 ```typescript
 const featureName = args.name;
-const featureDescription = args.text;
+const featureText = args.text || '';
+const epicId = args.epic || null;
 
-// Validate feature name is provided
-if (!featureName || featureName.trim().length === 0) {
-  console.error('❌ Error: Feature name is required.');
-  console.log('Usage: /spec.feature [name] "[description]"');
-  console.log('Example: /spec.feature user-auth "Add user authentication"');
-  return;
+// Check if refining existing feature
+if (featureName && (
+  featureName.match(/^FEAT-\d+$/) ||
+  fileExists(`docs/planning/features/${featureName}.md`) ||
+  dirExists(`docs/features/${featureName}`)
+)) {
+  console.log('📝 Refining existing feature...');
+  return refineFeature(featureName, featureText);
 }
 
-// Validate feature description is provided
-if (!featureDescription || featureDescription.trim().length === 0) {
-  console.error('❌ Error: Feature description is required.');
-  console.log('Usage: /spec.feature [name] "[description]"');
-  return;
-}
-
-// Validate kebab-case format
-const kebabCaseRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-if (!kebabCaseRegex.test(featureName)) {
-  console.error('❌ Error: Feature name must be in kebab-case format.');
-  console.log('Examples of valid names: user-auth, data-export, real-time-sync');
-  console.log(`Invalid name: ${featureName}`);
-
-  const suggestion = featureName
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
-  console.log(`Suggested name: ${suggestion}`);
-  return;
-}
-
-console.log('Feature Name:', featureName);
-console.log('Description:', featureDescription);
+// Creating new feature
+console.log('📝 Creating new feature...');
 console.log('');
 ```
 
-### Step 2: Check if Feature Exists
+## Create Feature Flow
 
-Determine if this is a new feature or updating an existing one:
+### Step 2: Handle Epic Linking (Optional)
 
 ```typescript
-const featurePath = `docs/features/${featureName}`;
-const requirementsPath = `${featurePath}/requirements.md`;
-const isNewFeature = !dirExists(featurePath);
+let parentEpic = null;
 
-if (isNewFeature) {
-  console.log('📝 Creating new feature...');
+if (epicId) {
+  console.log(`Checking epic: ${epicId}...`);
+
+  // Find epic file
+  const epicFiles = glob(`docs/planning/epics/${epicId}-*.md`);
+
+  if (epicFiles.length === 0) {
+    console.warn(`⚠️  Epic ${epicId} not found`);
+
+    const proceed = askChoice(
+      'How would you like to proceed?',
+      [
+        'Continue without epic (standalone feature)',
+        'Create the epic first',
+        'Cancel'
+      ]
+    );
+
+    if (proceed === 1) {
+      console.log('');
+      console.log(`Let's create the epic first...`);
+      executeCommand(`/specid.epic`);
+      return;
+    } else if (proceed === 2) {
+      console.log('Cancelled.');
+      return;
+    }
+
+    console.log('');
+    console.log('✓ Proceeding as standalone feature');
+  } else {
+    parentEpic = readFile(epicFiles[0]);
+    const epicTitle = parentEpic.match(/^# (.+)$/m)[1];
+    console.log(`✓ Will link to: ${epicId} - ${epicTitle}`);
+  }
+
   console.log('');
 } else {
-  console.log('✓ Feature exists - will update requirements');
+  console.log('💡 Tip: Features can optionally belong to epics for better organization.');
+  console.log('   Add --epic EPIC-NNN to link this feature to an epic.');
   console.log('');
+
+  const linkToEpic = askYesNo('Would you like to link this feature to an epic?');
+
+  if (linkToEpic) {
+    // List available epics
+    const epicFiles = glob('docs/planning/epics/EPIC-*.md');
+
+    if (epicFiles.length === 0) {
+      console.log('');
+      console.log('No epics found. Create one first with:');
+      console.log('  /specid.epic');
+      console.log('');
+      console.log('Continuing as standalone feature...');
+      console.log('');
+    } else {
+      console.log('');
+      console.log('Available epics:');
+      epicFiles.forEach((file, i) => {
+        const content = readFile(file);
+        const id = file.match(/EPIC-\d+/)[0];
+        const title = content.match(/^# (.+)$/m)[1];
+        console.log(`  ${i + 1}. ${id}: ${title}`);
+      });
+      console.log('');
+
+      const epicChoice = ask('Enter epic number or ID (or leave blank to skip):');
+
+      if (epicChoice) {
+        // Parse choice
+        if (epicChoice.match(/^\d+$/)) {
+          const idx = parseInt(epicChoice) - 1;
+          if (idx >= 0 && idx < epicFiles.length) {
+            parentEpic = readFile(epicFiles[idx]);
+            epicId = epicFiles[idx].match(/EPIC-\d+/)[0];
+          }
+        } else if (epicChoice.match(/^EPIC-\d+$/)) {
+          const file = epicFiles.find(f => f.includes(epicChoice));
+          if (file) {
+            parentEpic = readFile(file);
+            epicId = epicChoice;
+          }
+        }
+      }
+
+      console.log('');
+    }
+  } else {
+    console.log('');
+  }
 }
 ```
 
-### Step 3: Ask for Confirmation Preference
-
-Ask user how they want to handle file operations:
+### Step 3: Gather Basic Feature Information
 
 ```typescript
-const confirmationMode = askChoice(
-  'Would you like to review the requirements before they\'re written?',
-  [
-    'Yes - show me the requirements for confirmation',
-    'No - proceed automatically'
-  ]
-) === 0;
+console.log('Let\'s define this feature. I\'ll ask a few questions to understand what you\'re building.');
+console.log('');
 
+const featureInfo = {
+  title: featureName || ask('[1] What is the feature name/title?'),
+  overview: featureText || ask('[2] What does this feature do? (Brief overview)'),
+  problem: ask('[3] What problem does this solve for users?'),
+  value: ask('[4] What value does it provide?')
+};
+
+console.log('');
+console.log('Great! Now let\'s think about the user stories...');
 console.log('');
 ```
 
-### Step 4: Load Requirements Template
-
-Load the template from `.spec/templates/`:
+### Step 4: Collaborative Story Building
 
 ```typescript
-const templatePath = '.spec/templates/requirements-template.md';
+// Start with initial suggestions based on what we know
+console.log('Based on your description, I\'m thinking about the user stories needed.');
+console.log('Let me suggest some stories, and you can refine them.');
+console.log('');
+
+// Generate initial story suggestions
+const suggestedStories = generateStorySuggestions(
+  featureInfo.overview,
+  featureInfo.problem
+);
+
+console.log('Suggested User Stories:');
+console.log('');
+
+suggestedStories.forEach((story, i) => {
+  console.log(`Story ${i + 1}:`);
+  console.log(`  As a ${story.asA}`);
+  console.log(`  I want to ${story.iWantTo}`);
+  console.log(`  So that ${story.soThat}`);
+  console.log('');
+});
+
+const storiesLookGood = askChoice(
+  'How do these stories look?',
+  [
+    'Good - let\'s use these',
+    'Need refinement - let me edit them',
+    'Start over - I\'ll write them myself'
+  ]
+);
+
+console.log('');
+
+let finalStories = [];
+
+if (storiesLookGood === 0) {
+  // Use suggested stories
+  finalStories = suggestedStories;
+
+} else if (storiesLookGood === 1) {
+  // Refine stories one by one
+  console.log('Let\'s refine each story...');
+  console.log('');
+
+  for (let i = 0; i < suggestedStories.length; i++) {
+    const story = suggestedStories[i];
+
+    console.log(`Story ${i + 1} (current):`);
+    console.log(`  As a ${story.asA}`);
+    console.log(`  I want to ${story.iWantTo}`);
+    console.log(`  So that ${story.soThat}`);
+    console.log('');
+
+    const action = askChoice(
+      'What would you like to do?',
+      ['Keep as-is', 'Edit', 'Remove', 'Split into multiple stories']
+    );
+
+    if (action === 0) {
+      finalStories.push(story);
+
+    } else if (action === 1) {
+      // Edit
+      finalStories.push({
+        asA: ask('  As a... (press Enter to keep):', story.asA) || story.asA,
+        iWantTo: ask('  I want to... (press Enter to keep):', story.iWantTo) || story.iWantTo,
+        soThat: ask('  So that... (press Enter to keep):', story.soThat) || story.soThat
+      });
+
+    } else if (action === 2) {
+      // Remove - don't add to finalStories
+      console.log('  ✓ Removed');
+
+    } else if (action === 3) {
+      // Split
+      console.log('  Let\'s split this into multiple stories...');
+      const numStories = parseInt(ask('  How many stories? (2-3):')) || 2;
+
+      for (let j = 0; j < numStories; j++) {
+        console.log(`  Story ${i + 1}.${j + 1}:`);
+        finalStories.push({
+          asA: ask('    As a...:', story.asA),
+          iWantTo: ask('    I want to...:'),
+          soThat: ask('    So that...:', story.soThat)
+        });
+      }
+    }
+
+    console.log('');
+  }
+
+  // Ask if they want to add more
+  if (askYesNo('Add additional stories?')) {
+    console.log('');
+    while (true) {
+      console.log('New story:');
+      finalStories.push({
+        asA: ask('  As a...:'),
+        iWantTo: ask('  I want to...:'),
+        soThat: ask('  So that...:')
+      });
+
+      console.log('');
+      if (!askYesNo('Add another?')) break;
+      console.log('');
+    }
+  }
+
+} else {
+  // Write from scratch
+  console.log('Let\'s write the stories from scratch...');
+  console.log('');
+
+  while (true) {
+    console.log('User story:');
+    finalStories.push({
+      asA: ask('  As a...:'),
+      iWantTo: ask('  I want to...:'),
+      soThat: ask('  So that...:')
+    });
+
+    console.log('');
+    if (!askYesNo('Add another story?')) break;
+    console.log('');
+  }
+}
+
+console.log('');
+console.log(`✓ ${finalStories.length} user ${finalStories.length === 1 ? 'story' : 'stories'} defined`);
+console.log('');
+```
+
+### Step 5: Build Acceptance Criteria Collaboratively
+
+```typescript
+console.log('Now let\'s define acceptance criteria for each story.');
+console.log('I\'ll ask probing questions to help think through the details...');
+console.log('');
+
+const storiesWithCriteria = [];
+
+for (let i = 0; i < finalStories.length; i++) {
+  const story = finalStories[i];
+
+  console.log('─────────────────────────────────────');
+  console.log(`Story ${i + 1}: ${story.iWantTo}`);
+  console.log('─────────────────────────────────────');
+  console.log('');
+
+  // Probing questions to elicit criteria
+  console.log('Let me ask some questions to understand the details...');
+  console.log('');
+
+  const details = {
+    happyPath: ask('[1] What happens when everything works correctly?'),
+    inputs: ask('[2] What inputs or data are needed?'),
+    outputs: ask('[3] What should the user see or get as output?'),
+    errors: ask('[4] What could go wrong? What errors should we handle?'),
+    validation: ask('[5] What validations or checks are needed?'),
+    edgeCases: ask('[6] Any edge cases or special scenarios? (optional):')
+  };
+
+  console.log('');
+
+  // Generate suggested criteria in EARS format
+  const suggestedCriteria = generateEARSCriteria(story, details);
+
+  console.log('Based on your answers, here are suggested acceptance criteria:');
+  console.log('');
+
+  suggestedCriteria.forEach((criterion, idx) => {
+    console.log(`${criterion.id}. ${criterion.type} ${criterion.condition}, ${criterion.action}`);
+  });
+
+  console.log('');
+
+  const criteriaOk = askChoice(
+    'How do these criteria look?',
+    [
+      'Good - use these',
+      'Let me refine them',
+      'Add more criteria'
+    ]
+  );
+
+  console.log('');
+
+  let finalCriteria = [...suggestedCriteria];
+
+  if (criteriaOk === 1) {
+    // Refine
+    console.log('Let\'s refine the criteria...');
+    finalCriteria = [];
+
+    for (const criterion of suggestedCriteria) {
+      console.log(`Current: ${criterion.id}. ${criterion.type} ${criterion.condition}, ${criterion.action}`);
+
+      const action = askChoice(
+        'What would you like to do?',
+        ['Keep', 'Edit', 'Remove']
+      );
+
+      if (action === 0) {
+        finalCriteria.push(criterion);
+      } else if (action === 1) {
+        const type = askChoice(
+          '  Criterion type:',
+          ['WHEN', 'IF', 'WHILE']
+        );
+        finalCriteria.push({
+          id: criterion.id,
+          type: ['WHEN', 'IF', 'WHILE'][type],
+          condition: ask('  Condition:', criterion.condition),
+          action: ask('  Action (should include SHALL):', criterion.action)
+        });
+      }
+      // Remove: don't add
+
+      console.log('');
+    }
+  }
+
+  if (criteriaOk === 2 || askYesNo('Add more acceptance criteria?')) {
+    console.log('');
+    let acNumber = finalCriteria.length + 1;
+
+    while (true) {
+      console.log(`New criterion AC-${acNumber}:`);
+
+      const type = askChoice(
+        '  Type:',
+        ['WHEN (trigger/input)', 'IF (conditional)', 'WHILE (ongoing state)']
+      );
+
+      finalCriteria.push({
+        id: `AC-${acNumber}`,
+        type: ['WHEN', 'IF', 'WHILE'][type],
+        condition: ask('  Condition (e.g., "user clicks submit button"):'),
+        action: ask('  Action (use SHALL, e.g., "the system SHALL validate inputs"):')
+      });
+
+      acNumber++;
+      console.log('');
+
+      if (!askYesNo('Add another criterion?')) break;
+      console.log('');
+    }
+  }
+
+  storiesWithCriteria.push({
+    ...story,
+    criteria: finalCriteria,
+    storyId: `US-${i + 1}`
+  });
+
+  console.log('');
+}
+
+console.log('✓ Acceptance criteria defined for all stories');
+console.log('');
+```
+
+### Step 6: Determine Feature Number
+
+```typescript
+console.log('Assigning feature number...');
+
+const featuresDir = 'docs/planning/features';
+let featureNumber = 1;
+
+if (!dirExists(featuresDir)) {
+  createDir(featuresDir);
+  console.log(`✓ Created ${featuresDir}/`);
+}
+
+const featureFiles = glob(`${featuresDir}/FEAT-*.md`);
+const featureNumbers = featureFiles
+  .filter(f => f.match(/FEAT-(\d+)/))
+  .map(f => parseInt(f.match(/FEAT-(\d+)/)[1]))
+  .sort((a, b) => b - a);
+
+if (featureNumbers.length > 0) {
+  featureNumber = featureNumbers[0] + 1;
+}
+
+const featureId = `FEAT-${String(featureNumber).padStart(3, '0')}`;
+const featureSlug = featureInfo.title
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '');
+const featureFileName = `${featureId}-${featureSlug}.md`;
+const featurePath = `${featuresDir}/${featureFileName}`;
+
+console.log(`✓ Feature ID: ${featureId}`);
+console.log('');
+```
+
+### Step 7: Generate Functional and Non-Functional Requirements
+
+```typescript
+console.log('Generating functional and non-functional requirements...');
+console.log('');
+
+// Extract functional requirements from criteria
+const functionalRequirements = [];
+let frNumber = 1;
+
+// Group criteria by category
+const happyPathCriteria = [];
+const errorCriteria = [];
+const validationCriteria = [];
+
+for (const story of storiesWithCriteria) {
+  for (const criterion of story.criteria) {
+    const text = `${criterion.condition} ${criterion.action}`.toLowerCase();
+
+    if (text.includes('error') || text.includes('invalid') || text.includes('fail')) {
+      errorCriteria.push(criterion);
+    } else if (text.includes('validat') || text.includes('check') || text.includes('verify')) {
+      validationCriteria.push(criterion);
+    } else {
+      happyPathCriteria.push(criterion);
+    }
+  }
+}
+
+// Create FRs from happy path
+if (happyPathCriteria.length > 0) {
+  for (const criterion of happyPathCriteria.slice(0, 3)) {
+    functionalRequirements.push({
+      id: `FR-${frNumber++}`,
+      statement: `${criterion.type} ${criterion.condition}, the system ${criterion.action}`,
+      references: [criterion.id]
+    });
+  }
+}
+
+// Create FR for error handling if needed
+if (errorCriteria.length > 0) {
+  functionalRequirements.push({
+    id: `FR-${frNumber++}`,
+    statement: 'The system SHALL handle all error conditions gracefully with user-friendly messages',
+    references: errorCriteria.map(c => c.id)
+  });
+}
+
+// Create FR for validation if needed
+if (validationCriteria.length > 0) {
+  functionalRequirements.push({
+    id: `FR-${frNumber++}`,
+    statement: 'The system SHALL validate all inputs according to business rules',
+    references: validationCriteria.map(c => c.id)
+  });
+}
+
+// Non-functional requirements
+const nonFunctionalRequirements = [
+  {
+    id: 'NFR-1',
+    type: 'Usability',
+    statement: 'The feature SHALL provide clear user feedback and intuitive interactions'
+  },
+  {
+    id: 'NFR-2',
+    type: 'Performance',
+    statement: 'The feature SHALL respond to user actions within 2 seconds'
+  },
+  {
+    id: 'NFR-3',
+    type: 'Maintainability',
+    statement: 'The code SHALL follow project coding standards and be well-documented'
+  }
+];
+
+console.log(`✓ Generated ${functionalRequirements.length} functional requirements`);
+console.log(`✓ Generated ${nonFunctionalRequirements.length} non-functional requirements`);
+console.log('');
+```
+
+### Step 8: Load Template and Generate Document
+
+```typescript
+const templatePath = '.spec/templates/feature-template.md';
 let template = '';
-let templateSource = '';
 
 if (fileExists(templatePath)) {
   template = readFile(templatePath);
-  templateSource = 'custom template';
   console.log(`✓ Loaded template from ${templatePath}`);
 } else {
-  console.warn('⚠️ Warning: requirements-template.md not found');
+  template = getInlineFeatureTemplate();
+  console.log('⚠️  Using inline default template');
+}
 
-  const useInline = askChoice(
-    'How would you like to proceed?',
-    [
-      'Use inline default template (not recommended)',
-      'Stop and create template first'
-    ]
-  ) === 0;
+console.log('');
 
-  if (!useInline) {
-    console.log('');
-    console.log(`Please create ${templatePath} and run this command again.`);
-    return;
+// Build document sections
+let userStoriesSection = '';
+for (const story of storiesWithCriteria) {
+  userStoriesSection += `### ${story.storyId}: ${story.iWantTo}\n\n`;
+  userStoriesSection += `**As a** ${story.asA}\n`;
+  userStoriesSection += `**I want to** ${story.iWantTo}\n`;
+  userStoriesSection += `**So that** ${story.soThat}\n\n`;
+  userStoriesSection += `**Acceptance Criteria**:\n\n`;
+
+  for (const criterion of story.criteria) {
+    userStoriesSection += `${criterion.id}. ${criterion.type} ${criterion.condition}, ${criterion.action}\n`;
   }
 
-  template = getInlineRequirementsTemplate();
-  templateSource = 'inline default';
-  console.log('⚠️ Using inline default template');
+  userStoriesSection += '\n';
 }
 
+let frSection = '';
+for (const fr of functionalRequirements) {
+  frSection += `- **${fr.id}**: ${fr.statement}\n`;
+  frSection += `  - _References: ${fr.references.join(', ')}_\n`;
+}
+
+let nfrSection = '';
+for (const nfr of nonFunctionalRequirements) {
+  nfrSection += `- **${nfr.id}** (${nfr.type}): ${nfr.statement}\n`;
+}
+
+const featureContent = template
+  .replace(/\[FEATURE-ID\]/g, featureId)
+  .replace(/\[FEATURE-TITLE\]/g, featureInfo.title)
+  .replace(/\[EPIC-LINK\]/g, epicId ? `**Epic**: [${epicId}](../../planning/epics/${epicId}-*.md)\n` : '')
+  .replace(/\[DATE\]/g, new Date().toISOString().split('T')[0])
+  .replace(/\[OVERVIEW\]/g, featureInfo.overview)
+  .replace(/\[PROBLEM\]/g, featureInfo.problem)
+  .replace(/\[VALUE\]/g, featureInfo.value)
+  .replace(/\[USER-STORIES\]/g, userStoriesSection)
+  .replace(/\[FUNCTIONAL-REQUIREMENTS\]/g, frSection)
+  .replace(/\[NON-FUNCTIONAL-REQUIREMENTS\]/g, nfrSection);
+
+console.log('✓ Generated feature document');
 console.log('');
 ```
 
-### Step 5: Ask Clarifying Questions
-
-Elicit comprehensive requirements through targeted questions:
+### Step 9: Validate Quality
 
 ```typescript
-console.log('Let\'s gather detailed requirements...');
+console.log('Validating requirements quality...');
 console.log('');
 
-// Core questions
-const questions = [
-  'Who are the primary users of this feature?',
-  'What is the main goal or benefit for users?',
-  'What are the key actions users can perform?',
-  'What data or inputs are required?',
-  'What are the expected outcomes or outputs?',
-  'What happens if something goes wrong? (error scenarios)',
-  'Are there any special conditions or edge cases?',
-  'What are the performance or quality expectations?'
-];
+const issues = validateRequirements(featureContent, storiesWithCriteria);
 
-const answers = {};
-for (const question of questions) {
-  const answer = ask(question);
-  answers[question] = answer || 'Not specified';
-}
-
-console.log('');
-console.log('Great! Now let\'s think about edge cases and error handling...');
-console.log('');
-
-// Edge case questions
-const edgeCaseQuestions = [
-  'What happens with invalid or missing inputs?',
-  'What happens with duplicate or conflicting data?',
-  'What happens under high load or concurrent access?',
-  'Are there any boundary conditions (min/max values, limits)?',
-  'What permissions or access controls are needed?'
-];
-
-for (const question of edgeCaseQuestions) {
-  const answer = ask(question);
-  answers[question] = answer || 'Not specified';
-}
-
-console.log('');
-```
-
-### Step 6: Generate Requirements with EARS Notation
-
-Create or update requirements using EARS notation:
-
-```typescript
-// If updating, read existing content
-let existingContent = '';
-if (!isNewFeature && fileExists(requirementsPath)) {
-  existingContent = readFile(requirementsPath);
-  console.log('✓ Read existing requirements');
-  console.log('');
-}
-
-// Generate user stories
-const userStories = generateUserStories(
-  featureName,
-  featureDescription,
-  answers
-);
-
-// Generate acceptance criteria with EARS notation
-const acceptanceCriteria = generateEARSCriteria(
-  featureName,
-  featureDescription,
-  answers,
-  userStories
-);
-
-// Generate functional requirements
-const functionalRequirements = generateFunctionalRequirements(
-  featureName,
-  acceptanceCriteria
-);
-
-// Generate non-functional requirements
-const nonFunctionalRequirements = generateNonFunctionalRequirements(
-  featureName,
-  answers
-);
-
-// Compile full requirements document
-const requirementsContent = compileRequirementsDocument({
-  template: template,
-  featureName: featureName,
-  description: featureDescription,
-  userStories: userStories,
-  functionalRequirements: functionalRequirements,
-  nonFunctionalRequirements: nonFunctionalRequirements,
-  edgeCases: extractEdgeCases(answers),
-  outOfScope: generateOutOfScope(featureDescription)
-});
-
-console.log('✓ Generated requirements with EARS notation');
-console.log('');
-```
-
-### Step 7: Validate Requirements
-
-Validate against quality checklist:
-
-```typescript
-console.log('Validating requirements...');
-console.log('');
-
-const validationIssues = validateRequirements(requirementsContent);
-
-if (validationIssues.length > 0) {
-  console.log('⚠️ Quality issues detected:');
-  for (const issue of validationIssues) {
+if (issues.length > 0) {
+  console.log('⚠️  Quality checks found some issues:');
+  for (const issue of issues) {
     console.log(`  - ${issue}`);
   }
   console.log('');
-  console.log('Consider addressing these before proceeding.');
-  console.log('');
 
-  const proceedAnyway = askYesNo('Proceed anyway?');
-  if (!proceedAnyway) {
-    console.log('Cancelled. Please refine the requirements and try again.');
+  const proceed = askYesNo('These are recommendations. Proceed anyway?');
+  if (!proceed) {
+    console.log('Cancelled. Please refine and try again.');
     return;
   }
   console.log('');
 } else {
-  console.log('✓ Requirements pass quality validation');
+  console.log('✓ All quality checks passed');
   console.log('');
 }
 ```
 
-### Step 8: Show Preview and Write File
-
-Display preview if in confirmation mode, then write the file:
+### Step 10: Preview and Write
 
 ```typescript
-// Create directory if new feature
-if (isNewFeature) {
-  createDir(featurePath);
-  console.log(`✓ Created directory: ${featurePath}`);
-  console.log('');
-}
+const confirmationMode = askChoice(
+  'Would you like to review the complete feature document?',
+  ['Yes - show me the full document', 'No - just write it']
+) === 0;
 
-// Show preview if confirmation mode
+console.log('');
+
 if (confirmationMode) {
   console.log('═══════════════════════════════════════');
-  console.log('Requirements Preview');
+  console.log('Feature Document Preview');
   console.log('═══════════════════════════════════════');
   console.log('');
-  console.log(requirementsContent);
+  console.log(featureContent);
   console.log('');
   console.log('═══════════════════════════════════════');
   console.log('');
 
-  const approved = askYesNo('Write this file?');
+  const approved = askYesNo('Write this feature?');
   if (!approved) {
-    console.log('⚠️ Cancelled - requirements not written');
+    console.log('⚠️  Cancelled - feature not written');
     return;
   }
   console.log('');
 }
 
-// Write requirements file
-writeFile(requirementsPath, requirementsContent);
-console.log(`✓ ${isNewFeature ? 'Created' : 'Updated'} ${requirementsPath} (using ${templateSource})`);
+writeFile(featurePath, featureContent);
+console.log(`✓ Created ${featurePath}`);
 console.log('');
 ```
 
-### Step 9: Display Summary
+### Step 11: Update Epic (if applicable)
 
-Show what was accomplished:
+```typescript
+if (epicId && parentEpic) {
+  console.log(`Updating epic ${epicId}...`);
+
+  // Find features table and add new feature
+  let updatedEpic = parentEpic;
+
+  // Add to features table
+  const featureRow = `| [${featureId}](../../planning/features/${featureFileName}) | Draft | - | TBD |`;
+
+  updatedEpic = updatedEpic.replace(
+    /(## Features\n\n\| Feature[\s\S]+?\n\|[-|\s]+\|)\n/,
+    `$1\n${featureRow}\n`
+  );
+
+  // Update date
+  updatedEpic = updatedEpic.replace(
+    /\*\*Last Updated\*\*: .+/,
+    `**Last Updated**: ${new Date().toISOString().split('T')[0]}`
+  );
+
+  const epicPath = glob(`docs/planning/epics/${epicId}-*.md`)[0];
+  writeFile(epicPath, updatedEpic);
+
+  console.log(`✓ Added feature to ${epicId}`);
+  console.log('');
+}
+```
+
+### Step 12: Display Summary
 
 ```typescript
 console.log('═══════════════════════════════════════');
-console.log('✓ Feature Requirements Complete');
+console.log('✓ Feature Created Successfully');
 console.log('═══════════════════════════════════════');
 console.log('');
-console.log(`Feature: ${featureName}`);
-console.log(`Location: ${requirementsPath}`);
+console.log(`Feature ID: ${featureId}`);
+console.log(`Title: ${featureInfo.title}`);
+if (epicId) {
+  console.log(`Epic: ${epicId}`);
+}
+console.log(`Location: ${featurePath}`);
 console.log('');
-
-// Count requirements
-const frCount = functionalRequirements.length;
-const nfrCount = nonFunctionalRequirements.length;
-const storyCount = userStories.length;
-
 console.log('Summary:');
-console.log(`  - ${storyCount} user ${storyCount === 1 ? 'story' : 'stories'}`);
-console.log(`  - ${frCount} functional requirements`);
-console.log(`  - ${nfrCount} non-functional requirements`);
+console.log(`  - ${storiesWithCriteria.length} user stories`);
+console.log(`  - ${storiesWithCriteria.reduce((sum, s) => sum + s.criteria.length, 0)} acceptance criteria`);
+console.log(`  - ${functionalRequirements.length} functional requirements`);
+console.log(`  - ${nonFunctionalRequirements.length} non-functional requirements`);
 console.log('');
 ```
 
-### Step 10: STOP EXECUTION
-
-**CRITICAL**: The command must stop here.
+### Step 13: STOP EXECUTION
 
 ```typescript
 // Command execution STOPS here
 ```
 
-### Step 11: Offer Next Step (Optional)
-
-After stopping, optionally suggest moving to design:
+### Step 14: Offer Next Steps
 
 ```typescript
 console.log('───────────────────────────────────────');
-console.log('Next Step (Optional)');
+console.log('Next Steps (Optional)');
 console.log('───────────────────────────────────────');
 console.log('');
-console.log('Requirements are complete! Ready to move to design?');
+console.log('Your feature is ready! You can now:');
 console.log('');
-console.log('The design phase will create the system architecture');
-console.log('and implementation plan based on these requirements.');
+console.log('1. Prepare feature for development (creates spec breakdown):');
+console.log(`   /specid.prepare ${featureId}`);
+console.log('');
+console.log('2. Create first spec manually:');
+console.log('   /specid.spec [spec-name]');
 console.log('');
 
-const proceedToDesign = askYesNo(`Would you like to create the design for ${featureName}?`);
+const prepareNow = askYesNo('Would you like to prepare this feature for development now?');
 
-if (proceedToDesign) {
+if (prepareNow) {
   console.log('');
-  console.log(`Running: /spec.design ${featureName}`);
+  console.log(`Running: /specid.prepare ${featureId}`);
   console.log('');
-
-  // Execute /spec.design command
-  executeCommand(`/spec.design ${featureName}`);
-
-  // STOP again after that command completes
+  executeCommand(`/specid.prepare ${featureId}`);
 } else {
   console.log('');
-  console.log(`No problem! Run \`/spec.design ${featureName}\` when you're ready.`);
+  console.log('No problem! Run /specid.prepare when you\'re ready.');
+  console.log('');
+}
+```
+
+## Refine Feature Flow
+
+```typescript
+function refineFeature(featureName: string, refinementText: string) {
+  console.log(`Loading feature: ${featureName}...`);
+
+  // Find feature file
+  let featurePath = '';
+
+  if (featureName.match(/^FEAT-\d+$/)) {
+    const files = glob(`docs/planning/features/${featureName}-*.md`);
+    if (files.length > 0) {
+      featurePath = files[0];
+    }
+  } else {
+    // Check old structure
+    if (fileExists(`docs/planning/features/${featureName}.md`)) {
+      featurePath = `docs/planning/features/${featureName}.md`;
+    } else if (fileExists(`docs/features/${featureName}/requirements.md`)) {
+      featurePath = `docs/features/${featureName}/requirements.md`;
+    }
+  }
+
+  if (!featurePath) {
+    console.error(`❌ Feature not found: ${featureName}`);
+    return;
+  }
+
+  const featureContent = readFile(featurePath);
+  console.log(`✓ Loaded from ${featurePath}`);
+  console.log('');
+
+  // Extract current info
+  const titleMatch = featureContent.match(/^# (.+)$/m);
+  const statusMatch = featureContent.match(/\*\*Status\*\*: (.+)$/m);
+
+  console.log('Current Feature:');
+  console.log(`  Title: ${titleMatch ? titleMatch[1] : 'Unknown'}`);
+  console.log(`  Status: ${statusMatch ? statusMatch[1] : 'Unknown'}`);
+  console.log('');
+
+  if (refinementText) {
+    console.log(`Refinement guidance: ${refinementText}`);
+    console.log('');
+  }
+
+  const refinementArea = askChoice(
+    'What would you like to refine?',
+    [
+      'Overview/problem/value',
+      'User stories (add/modify/remove)',
+      'Acceptance criteria',
+      'Requirements (FR/NFR)',
+      'Multiple areas'
+    ]
+  );
+
+  console.log('');
+
+  // Handle based on selection
+  // ... (simplified for brevity - similar pattern to epic refinement)
+
+  console.log('✓ Feature refined');
   console.log('');
 }
 ```
 
 ## Helper Functions
 
-### Generate User Stories
+### Generate Story Suggestions
 
 ```typescript
-function generateUserStories(
-  featureName: string,
-  description: string,
-  answers: Record<string, string>
-): UserStory[] {
+function generateStorySuggestions(overview: string, problem: string): Story[] {
+  const stories: Story[] = [];
 
-  const primaryUsers = answers['Who are the primary users of this feature?'];
-  const mainGoal = answers['What is the main goal or benefit for users?'];
-  const keyActions = answers['What are the key actions users can perform?'];
+  // Simple heuristic-based suggestions
+  const text = `${overview} ${problem}`.toLowerCase();
 
-  const stories: UserStory[] = [];
-
-  // Parse key actions into individual stories
-  const actions = keyActions.split(/[,;]/).map(a => a.trim()).filter(a => a.length > 0);
-
-  for (let i = 0; i < actions.length; i++) {
-    const action = actions[i];
-
+  // Common patterns
+  if (text.match(/create|add|new/)) {
     stories.push({
-      id: i + 1,
-      title: action.charAt(0).toUpperCase() + action.slice(1),
-      asA: primaryUsers || 'user',
-      iWantTo: action,
-      soThat: mainGoal || 'achieve my goals',
-      acceptanceCriteria: [] // Will be filled by EARS generation
+      asA: 'user',
+      iWantTo: 'create new items',
+      soThat: 'I can manage my data'
     });
   }
 
-  // If no actions parsed, create a single story from the description
+  if (text.match(/view|see|display|show/)) {
+    stories.push({
+      asA: 'user',
+      iWantTo: 'view existing items',
+      soThat: 'I can find the information I need'
+    });
+  }
+
+  if (text.match(/edit|update|modify|change/)) {
+    stories.push({
+      asA: 'user',
+      iWantTo: 'edit existing items',
+      soThat: 'I can keep information up to date'
+    });
+  }
+
+  if (text.match(/delete|remove/)) {
+    stories.push({
+      asA: 'user',
+      iWantTo: 'delete unwanted items',
+      soThat: 'I can maintain clean data'
+    });
+  }
+
+  if (text.match(/search|find|filter/)) {
+    stories.push({
+      asA: 'user',
+      iWantTo: 'search and filter items',
+      soThat: 'I can quickly find what I need'
+    });
+  }
+
+  // If no patterns matched, provide generic template
   if (stories.length === 0) {
     stories.push({
-      id: 1,
-      title: description,
-      asA: primaryUsers || 'user',
-      iWantTo: description,
-      soThat: mainGoal || 'achieve my goals',
-      acceptanceCriteria: []
+      asA: 'user',
+      iWantTo: 'use this feature',
+      soThat: 'I can achieve my goal'
     });
   }
 
@@ -424,382 +886,139 @@ function generateUserStories(
 ### Generate EARS Criteria
 
 ```typescript
-function generateEARSCriteria(
-  featureName: string,
-  description: string,
-  answers: Record<string, string>,
-  userStories: UserStory[]
-): AcceptanceCriterion[] {
+function generateEARSCriteria(story: Story, details: any): Criterion[] {
+  const criteria: Criterion[] = [];
+  let acNumber = 1;
 
-  const criteria: AcceptanceCriterion[] = [];
-  let criterionNumber = 1;
+  // Happy path
+  if (details.happyPath && details.inputs && details.outputs) {
+    criteria.push({
+      id: `AC-${acNumber++}`,
+      type: 'WHEN',
+      condition: details.inputs,
+      action: `the system SHALL ${details.outputs}`
+    });
+  }
 
-  for (const story of userStories) {
-    // Happy path criteria (WHEN trigger, THEN outcome)
-    const inputs = answers['What data or inputs are required?'];
-    const outputs = answers['What are the expected outcomes or outputs?'];
+  // Validation
+  if (details.validation) {
+    criteria.push({
+      id: `AC-${acNumber++}`,
+      type: 'WHEN',
+      condition: 'inputs are provided',
+      action: `the system SHALL ${details.validation}`
+    });
+  }
 
-    if (inputs && outputs) {
+  // Error handling
+  if (details.errors) {
+    const errors = details.errors.split(/[,;]/).map(e => e.trim()).filter(e => e);
+
+    for (const error of errors.slice(0, 2)) {
       criteria.push({
-        id: `AC-${criterionNumber++}`,
-        type: 'WHEN',
-        condition: `${inputs} is provided`,
-        action: `SHALL ${outputs}`,
-        category: 'happy-path'
-      });
-    }
-
-    // Error handling criteria (IF condition, THEN error response)
-    const errorScenarios = answers['What happens if something goes wrong? (error scenarios)'];
-    if (errorScenarios) {
-      const errors = errorScenarios.split(/[,;]/).map(e => e.trim()).filter(e => e.length > 0);
-      for (const error of errors) {
-        criteria.push({
-          id: `AC-${criterionNumber++}`,
-          type: 'IF',
-          condition: error,
-          action: 'THEN SHALL display appropriate error message',
-          category: 'error-handling'
-        });
-      }
-    }
-
-    // Edge case criteria
-    const invalidInputs = answers['What happens with invalid or missing inputs?'];
-    if (invalidInputs) {
-      criteria.push({
-        id: `AC-${criterionNumber++}`,
+        id: `AC-${acNumber++}`,
         type: 'IF',
-        condition: 'input is invalid or missing',
-        action: `THEN SHALL ${invalidInputs}`,
-        category: 'edge-case'
+        condition: error,
+        action: 'the system SHALL display an appropriate error message'
       });
     }
+  }
 
-    const duplicateData = answers['What happens with duplicate or conflicting data?'];
-    if (duplicateData) {
-      criteria.push({
-        id: `AC-${criterionNumber++}`,
-        type: 'IF',
-        condition: 'duplicate or conflicting data is detected',
-        action: `THEN SHALL ${duplicateData}`,
-        category: 'edge-case'
-      });
-    }
-
-    // Performance criteria (WHILE condition, SHALL maintain performance)
-    const performance = answers['What are the performance or quality expectations?'];
-    if (performance) {
-      criteria.push({
-        id: `AC-${criterionNumber++}`,
-        type: 'WHILE',
-        condition: 'processing requests',
-        action: `SHALL ${performance}`,
-        category: 'performance'
-      });
-    }
-
-    // Permission criteria
-    const permissions = answers['What permissions or access controls are needed?'];
-    if (permissions) {
-      criteria.push({
-        id: `AC-${criterionNumber++}`,
-        type: 'WHEN',
-        condition: 'user lacks required permissions',
-        action: 'SHALL deny access and show permission error',
-        category: 'security'
-      });
-    }
-
-    // Assign criteria to story
-    story.acceptanceCriteria = criteria.filter(c =>
-      c.id.startsWith('AC-') // All criteria for this story
-    );
+  // Edge cases
+  if (details.edgeCases) {
+    criteria.push({
+      id: `AC-${acNumber++}`,
+      type: 'IF',
+      condition: details.edgeCases,
+      action: 'the system SHALL handle gracefully'
+    });
   }
 
   return criteria;
 }
 ```
 
-### Generate Functional Requirements
+### Validate Requirements
 
 ```typescript
-function generateFunctionalRequirements(
-  featureName: string,
-  criteria: AcceptanceCriterion[]
-): FunctionalRequirement[] {
-
-  const requirements: FunctionalRequirement[] = [];
-  let reqNumber = 1;
-
-  // Group criteria by category
-  const categorized = {
-    'happy-path': criteria.filter(c => c.category === 'happy-path'),
-    'error-handling': criteria.filter(c => c.category === 'error-handling'),
-    'edge-case': criteria.filter(c => c.category === 'edge-case'),
-    'security': criteria.filter(c => c.category === 'security')
-  };
-
-  // Create requirements from happy path criteria
-  for (const criterion of categorized['happy-path']) {
-    requirements.push({
-      id: `FR-${reqNumber++}`,
-      statement: `${criterion.type} ${criterion.condition}, the system ${criterion.action}`,
-      acceptanceCriteria: [criterion.id],
-      priority: 'must-have'
-    });
-  }
-
-  // Create requirements from error handling
-  if (categorized['error-handling'].length > 0) {
-    requirements.push({
-      id: `FR-${reqNumber++}`,
-      statement: 'The system SHALL handle all error conditions gracefully with user-friendly messages',
-      acceptanceCriteria: categorized['error-handling'].map(c => c.id),
-      priority: 'must-have'
-    });
-  }
-
-  // Create requirements from security criteria
-  if (categorized['security'].length > 0) {
-    requirements.push({
-      id: `FR-${reqNumber++}`,
-      statement: 'The system SHALL enforce appropriate access controls and permissions',
-      acceptanceCriteria: categorized['security'].map(c => c.id),
-      priority: 'must-have'
-    });
-  }
-
-  return requirements;
-}
-```
-
-### Generate Non-Functional Requirements
-
-```typescript
-function generateNonFunctionalRequirements(
-  featureName: string,
-  answers: Record<string, string>
-): NonFunctionalRequirement[] {
-
-  const requirements: NonFunctionalRequirement[] = [];
-  let reqNumber = 1;
-
-  // Performance
-  const performance = answers['What are the performance or quality expectations?'];
-  if (performance) {
-    requirements.push({
-      id: `NFR-${reqNumber++}`,
-      type: 'Performance',
-      statement: performance,
-      priority: 'should-have'
-    });
-  }
-
-  // High load handling
-  const highLoad = answers['What happens under high load or concurrent access?'];
-  if (highLoad) {
-    requirements.push({
-      id: `NFR-${reqNumber++}`,
-      type: 'Scalability',
-      statement: highLoad,
-      priority: 'should-have'
-    });
-  }
-
-  // Always include these baseline NFRs
-  requirements.push({
-    id: `NFR-${reqNumber++}`,
-    type: 'Usability',
-    statement: 'The feature SHALL provide clear user feedback and intuitive interactions',
-    priority: 'must-have'
-  });
-
-  requirements.push({
-    id: `NFR-${reqNumber++}`,
-    type: 'Maintainability',
-    statement: 'The code SHALL follow project coding standards and be well-documented',
-    priority: 'must-have'
-  });
-
-  return requirements;
-}
-```
-
-### Compile Requirements Document
-
-```typescript
-function compileRequirementsDocument(data: {
-  template: string;
-  featureName: string;
-  description: string;
-  userStories: UserStory[];
-  functionalRequirements: FunctionalRequirement[];
-  nonFunctionalRequirements: NonFunctionalRequirement[];
-  edgeCases: string[];
-  outOfScope: string[];
-}): string {
-
-  let content = data.template;
-
-  // Replace basic placeholders
-  content = content.replace(/\[FeatureName\]/g, data.featureName);
-  content = content.replace(/\[feature-name\]/g, data.featureName);
-  content = content.replace(/\[Date\]/g, new Date().toISOString().split('T')[0]);
-  content = content.replace(/\[Description\]/g, data.description);
-
-  // Build user stories section
-  let storiesSection = '';
-  for (const story of data.userStories) {
-    storiesSection += `\n### Story ${story.id}: ${story.title}\n\n`;
-    storiesSection += `**As a** ${story.asA}\n`;
-    storiesSection += `**I want to** ${story.iWantTo}\n`;
-    storiesSection += `**So that** ${story.soThat}\n\n`;
-    storiesSection += `**Acceptance Criteria**:\n\n`;
-
-    for (const criterion of story.acceptanceCriteria) {
-      const earsFmt = formatEARSCriterion(criterion);
-      storiesSection += `${earsFmt}\n`;
-    }
-  }
-
-  // Build functional requirements section
-  let frSection = '';
-  for (const req of data.functionalRequirements) {
-    frSection += `- **${req.id}**: ${req.statement}\n`;
-  }
-
-  // Build non-functional requirements section
-  let nfrSection = '';
-  for (const req of data.nonFunctionalRequirements) {
-    nfrSection += `- **${req.id}** (${req.type}): ${req.statement}\n`;
-  }
-
-  // Build edge cases section
-  let edgeCasesSection = '';
-  for (const edgeCase of data.edgeCases) {
-    edgeCasesSection += `- ${edgeCase}\n`;
-  }
-
-  // Build out of scope section
-  let outOfScopeSection = '';
-  for (const item of data.outOfScope) {
-    outOfScopeSection += `- ${item}\n`;
-  }
-
-  // Replace sections in template
-  content = content.replace(/\[UserStories\]/g, storiesSection);
-  content = content.replace(/\[FunctionalRequirements\]/g, frSection);
-  content = content.replace(/\[NonFunctionalRequirements\]/g, nfrSection);
-  content = content.replace(/\[EdgeCases\]/g, edgeCasesSection || '- TBD');
-  content = content.replace(/\[OutOfScope\]/g, outOfScopeSection || '- TBD');
-
-  return content;
-}
-
-function formatEARSCriterion(criterion: AcceptanceCriterion): string {
-  return `${criterion.id}. ${criterion.type} ${criterion.condition}, ${criterion.action}`;
-}
-```
-
-### Validation
-
-```typescript
-function validateRequirements(content: string): string[] {
-  const issues = [];
-
-  // Check for unfilled placeholders
-  if (content.includes('[') && content.includes(']')) {
-    if (content.match(/\[[A-Z][a-zA-Z]+\]/)) {
-      issues.push('Contains unfilled placeholders');
-    }
-  }
+function validateRequirements(content: string, stories: any[]): string[] {
+  const issues: string[] = [];
 
   // Check for EARS notation
-  const hasEARS = content.includes('WHEN') || content.includes('IF') ||
-                  content.includes('WHILE') || content.includes('SHALL');
-  if (!hasEARS) {
-    issues.push('Missing EARS notation (WHEN/IF/WHILE/SHALL)');
+  if (!content.match(/\b(WHEN|IF|WHILE)\b.*\bSHALL\b/)) {
+    issues.push('Consider using EARS notation (WHEN/IF/WHILE...SHALL) for clarity');
   }
 
-  // Check for user stories
-  if (!content.includes('As a') || !content.includes('I want to')) {
-    issues.push('Missing proper user story format');
+  // Check story count
+  if (stories.length === 0) {
+    issues.push('No user stories defined');
   }
 
-  // Check for numbered acceptance criteria
-  const hasNumberedCriteria = /AC-\d+/.test(content) || /\d+\.\s+(WHEN|IF|WHILE)/.test(content);
-  if (!hasNumberedCriteria) {
-    issues.push('Acceptance criteria should be numbered for traceability');
+  // Check for acceptance criteria
+  const criteriaCount = stories.reduce((sum, s) => sum + (s.criteria?.length || 0), 0);
+  if (criteriaCount === 0) {
+    issues.push('No acceptance criteria defined');
   }
 
-  // Check minimum length
-  if (content.length < 1000) {
-    issues.push('Requirements document seems too short - consider adding more detail');
+  // Check for FR/NFR
+  if (!content.includes('FR-1')) {
+    issues.push('No functional requirements (FR-) defined');
   }
 
   return issues;
 }
 ```
 
-### Extract Edge Cases
-
-```typescript
-function extractEdgeCases(answers: Record<string, string>): string[] {
-  const edgeCases = [];
-
-  const invalid = answers['What happens with invalid or missing inputs?'];
-  if (invalid && invalid !== 'Not specified') {
-    edgeCases.push(`Invalid inputs: ${invalid}`);
-  }
-
-  const duplicate = answers['What happens with duplicate or conflicting data?'];
-  if (duplicate && duplicate !== 'Not specified') {
-    edgeCases.push(`Duplicate data: ${duplicate}`);
-  }
-
-  const boundaries = answers['Are there any boundary conditions (min/max values, limits)?'];
-  if (boundaries && boundaries !== 'Not specified') {
-    edgeCases.push(`Boundary conditions: ${boundaries}`);
-  }
-
-  return edgeCases;
-}
-```
-
 ### Get Inline Template
 
 ```typescript
-function getInlineRequirementsTemplate(): string {
-  return `# Requirements: [FeatureName]
+function getInlineFeatureTemplate(): string {
+  return `# [FEATURE-TITLE]
 
-**Feature**: [feature-name]
-**Created**: [Date]
+**Feature ID**: [FEATURE-ID]
+[EPIC-LINK]**Created**: [DATE]
+**Last Updated**: [DATE]
 **Status**: Draft
 
 ## Overview
 
-[Description]
+[OVERVIEW]
+
+## Problem Statement
+
+[PROBLEM]
+
+## Value Proposition
+
+[VALUE]
 
 ## User Stories
 
-[UserStories]
+[USER-STORIES]
 
 ## Functional Requirements
 
-[FunctionalRequirements]
+[FUNCTIONAL-REQUIREMENTS]
 
 ## Non-Functional Requirements
 
-[NonFunctionalRequirements]
+[NON-FUNCTIONAL-REQUIREMENTS]
 
-## Edge Cases
+## Technical Considerations
 
-[EdgeCases]
+_To be added during design phase_
+
+## Dependencies
+
+_To be identified_
 
 ## Out of Scope
 
-[OutOfScope]
+_To be defined_
+
+## Notes
+
+_This feature was created using /specid.feature_
 `;
 }
 ```
@@ -807,43 +1026,47 @@ function getInlineRequirementsTemplate(): string {
 ## Type Definitions
 
 ```typescript
-interface UserStory {
-  id: number;
-  title: string;
+interface Story {
   asA: string;
   iWantTo: string;
   soThat: string;
-  acceptanceCriteria: AcceptanceCriterion[];
+  storyId?: string;
+  criteria?: Criterion[];
 }
 
-interface AcceptanceCriterion {
+interface Criterion {
   id: string;
-  type: 'WHEN' | 'WHILE' | 'IF';
+  type: 'WHEN' | 'IF' | 'WHILE';
   condition: string;
-  action: string; // Should include SHALL
-  category: 'happy-path' | 'error-handling' | 'edge-case' | 'performance' | 'security';
+  action: string;
 }
 
 interface FunctionalRequirement {
   id: string;
   statement: string;
-  acceptanceCriteria: string[];
-  priority: 'must-have' | 'should-have' | 'could-have';
+  references: string[];
 }
 
 interface NonFunctionalRequirement {
   id: string;
   type: string;
   statement: string;
-  priority: 'must-have' | 'should-have' | 'could-have';
 }
 ```
 
 ## Requirements Satisfied
 
-- ✅ FR-5.3.1: Creates feature directory and requirements.md for new features
-- ✅ FR-5.3.2: Updates existing requirements.md for existing features
-- ✅ FR-5.3.3: Generates requirements using EARS notation with numbered criteria
-- ✅ FR-5.3.4: Asks clarifying questions to elicit edge cases and acceptance criteria
-- ✅ FR-5.3.5: Includes user stories with proper format and validates quality
-- ✅ Requirement 1: Command execution control (STOP after completion, asks permission)
+- ✅ Conversational, collaborative approach with probing questions
+- ✅ Suggests stories and criteria rather than auto-creating
+- ✅ User can refine, edit, add, remove suggestions
+- ✅ Epic linking (optional --epic parameter)
+- ✅ FEAT-NNN sequential numbering
+- ✅ New directory structure (docs/planning/features/)
+- ✅ EARS notation (WHEN/IF/WHILE...SHALL)
+- ✅ Automatic FR/NFR generation with traceability
+- ✅ Quality validation with helpful recommendations
+- ✅ Updates parent epic when linked
+- ✅ Confirmation mode for final review
+- ✅ STOP after completion, offers next steps
+- ✅ Template system with fallback
+- ✅ Backward compatibility with old structure

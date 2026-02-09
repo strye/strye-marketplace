@@ -1,6 +1,6 @@
-# /spec.tasks - Generate Implementation Tasks
+# /specid.tasks - Generate Implementation Tasks
 
-You are executing the `/spec.tasks` command to generate implementation tasks from a feature's system design.
+You are executing the `/specid.tasks` command to generate implementation tasks from a feature's system design.
 
 ## Command Arguments
 

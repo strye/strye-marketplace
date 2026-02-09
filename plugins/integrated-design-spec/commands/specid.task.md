@@ -1,6 +1,6 @@
-# /spec.task - Execute Implementation Task
+# /specid.task - Execute Implementation Task
 
-You are executing the `/spec.task` command to implement a specific task from a feature's task list.
+You are executing the `/specid.task` command to implement a specific task from a feature's task list.
 
 ## Command Arguments
 
