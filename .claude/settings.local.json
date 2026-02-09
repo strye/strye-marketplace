@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && find {} -maxdepth 2 -type f')",
+      "Skill(plugin-dev:plugin-structure)",
+      "Skill(plugin-dev:plugin-settings)",
+      "Skill(plugin-dev:agent-development)",
+      "Skill(plugin-dev:hook-development)",
+	  "Skill(plugin-dev:skill-development)",
+      "Skill(plugin-dev:command-development)",
+      "Skill(plugin-dev:mcp-integration)",
+      "Skill(document-skills:mcp-builder)",
+	  "Skill(document-skills:skill-creator)",
+
       "Bash(mkdir:*)"
     ],
     "deny": [],
