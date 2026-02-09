@@ -1,0 +1,83 @@
+{
+  "patterns": [
+    {
+      "format": "WHEN [trigger], the system SHALL [response]",
+      "description": "Simple event-triggered requirement - no conditions",
+      "translation_steps": [
+        "Identify the trigger event (what action or state change activates this)",
+        "Identify the required response (what must the system do)",
+        "Determine if multiple components are needed",
+        "Define component interfaces to handle trigger and response"
+      ],
+      "example": {
+        "criterion": "AC-5: WHEN user submits valid credentials, the system SHALL authenticate and redirect to dashboard",
+        "components": [
+          {
+            "name": "AuthenticationService",
+            "method": "authenticate(credentials: Credentials): Promise<AuthResult>",
+            "responsibility": "Validate credentials against stored user data"
+          },
+          {
+            "name": "NavigationService",
+            "method": "redirectToDashboard(user: User): void",
+            "responsibility": "Redirect browser to dashboard page"
+          }
+        ],
+        "sequence": "1. SubmitButton triggers AuthenticationService.authenticate()\n2. If successful, NavigationService.redirectToDashboard() called\n3. Browser navigates to dashboard"
+      }
+    },
+    {
+      "format": "IF [condition] WHEN [trigger], the system SHALL [response]",
+      "description": "Conditional requirement - response depends on system state or context",
+      "translation_steps": [
+        "Identify the condition (what state must be true)",
+        "Identify the trigger (what event starts the evaluation)",
+        "Identify the response (what to do if condition is true)",
+        "Map condition checking to a Guard or Validator component",
+        "Map response to appropriate handler"
+      ],
+      "example": {
+        "criterion": "AC-6: IF credentials are invalid WHEN user attempts login, the system SHALL display 'Invalid email or password' error",
+        "components": [
+          {
+            "name": "AuthenticationService",
+            "method": "authenticate(credentials: Credentials): Promise<AuthResult>",
+            "responsibility": "Check if credentials are valid (condition checking)"
+          },
+          {
+            "name": "ErrorDisplayService",
+            "method": "showError(message: string): void",
+            "responsibility": "Display error message to user"
+          }
+        ],
+        "sequence": "1. SubmitButton triggers authenticate()\n2. Service checks if credentials valid (the IF condition)\n3. If not valid, ErrorDisplayService.showError() displays message\n4. User sees error and can retry"
+      }
+    },
+    {
+      "format": "WHILE [state], the system SHALL [behavior]",
+      "description": "State-based requirement - behavior maintained during ongoing state",
+      "translation_steps": [
+        "Identify the state (what condition must remain true)",
+        "Identify the behavior (what should happen while in this state)",
+        "Determine if state needs to be tracked (StateMachine component)",
+        "Define entry/exit conditions for the state"
+      ],
+      "example": {
+        "criterion": "NFR-3: WHILE processing payment WHEN user clicks Back button, the system SHALL prevent navigation and display 'Payment in progress' message",
+        "components": [
+          {
+            "name": "PaymentStateMachine",
+            "method": "isProcessing(): boolean",
+            "responsibility": "Track payment processing state"
+          },
+          {
+            "name": "NavigationGuard",
+            "method": "preventNavigation(message: string): void",
+            "responsibility": "Block navigation while in protected state"
+          }
+        ],
+        "sequence": "1. Payment starts, PaymentStateMachine enters PROCESSING state\n2. User clicks Back (triggers navigation attempt)\n3. NavigationGuard checks isProcessing() state\n4. Since WHILE condition true, navigation blocked and message shown\n5. Payment completes, state returns to normal"
+      }
+    }
+  ]
+}

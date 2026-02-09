@@ -1,0 +1,203 @@
+{
+  "patterns": [
+    {
+      "category": "happy_path",
+      "id": "q1.1_ideal_scenario",
+      "question": "Let's start with the ideal scenario - walk me through what happens when everything works perfectly.",
+      "example": "User clicks 'Add to Cart', item appears in cart, success message shows.",
+      "follow_ups": [
+        "What triggers this action?",
+        "What does the user see or experience?",
+        "What happens next?",
+        "How does the user know it succeeded?"
+      ],
+      "resulting_criteria": [
+        "WHEN user [action], the system SHALL [expected outcome]"
+      ]
+    },
+    {
+      "category": "happy_path",
+      "id": "q1.2_user_journey_steps",
+      "question": "What are the specific steps the user takes from start to finish?",
+      "example": "They browse products, click on one, select size/color, enter quantity, then click add to cart.",
+      "follow_ups": [
+        "Is there any branching or optional steps?",
+        "What if they change their mind mid-flow?",
+        "How many screens/pages involved?"
+      ],
+      "resulting_criteria": [
+        "WHEN user completes step [N], the system SHALL [enable next step]"
+      ]
+    },
+    {
+      "category": "happy_path",
+      "id": "q1.3_success_indicators",
+      "question": "How does the user know the action succeeded? What do they see, hear, or receive?",
+      "example": "They see a green toast notification, cart icon updates with count, item appears in sidebar.",
+      "follow_ups": [
+        "Should the indicator be immediate or slightly delayed?",
+        "How long should the indicator persist?",
+        "Should it persist across page navigation?"
+      ],
+      "resulting_criteria": [
+        "WHEN [action succeeds], the system SHALL display [visual/audio/haptic feedback]"
+      ]
+    },
+    {
+      "category": "error_discovery",
+      "id": "q2.1_what_could_go_wrong",
+      "question": "Now let's think about what could go wrong - what errors or failures should we handle?",
+      "example": "Item could be out of stock, session could expire, server could be unavailable.",
+      "follow_ups": [
+        "What happens if [input] is missing?",
+        "What if [external service] is unavailable?",
+        "How do we handle [concurrent action]?",
+        "What's the user experience when this fails?"
+      ],
+      "resulting_criteria": [
+        "IF [failure condition] WHEN [trigger], the system SHALL [error response]"
+      ]
+    },
+    {
+      "category": "error_discovery",
+      "id": "q2.2_invalid_inputs",
+      "question": "What happens if the user provides invalid or unexpected input?",
+      "example": "They might enter zero quantity, negative numbers, or non-numeric characters.",
+      "follow_ups": [
+        "What makes input valid vs invalid?",
+        "Should we validate immediately or on submit?",
+        "What error message should users see?"
+      ],
+      "resulting_criteria": [
+        "IF [input] is invalid WHEN [user submits], the system SHALL display [specific error message]"
+      ]
+    },
+    {
+      "category": "data_inputs",
+      "id": "q3.1_required_data",
+      "question": "What information is absolutely required for this to work? What's optional?",
+      "example": "Required: product ID, quantity. Optional: gift message, gift wrapping preference.",
+      "follow_ups": [
+        "Are there any combinations that change requirements?",
+        "Should defaults be applied for optional fields?",
+        "What if optional field is invalid?"
+      ],
+      "resulting_criteria": [
+        "FR-X: The system SHALL require [field list]",
+        "FR-X: The system SHALL allow optional [field list]"
+      ]
+    },
+    {
+      "category": "data_inputs",
+      "id": "q3.2_data_validation",
+      "question": "What makes each piece of data valid or invalid? What are the constraints?",
+      "example": "Product ID must exist in catalog. Quantity 1-999. Email format, gift message alphanumeric.",
+      "follow_ups": [
+        "Are there cross-field validations?",
+        "Should validation happen in real-time or on submit?",
+        "What about minimum/maximum values?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHEN user enters [field], the system SHALL validate [constraints]"
+      ]
+    },
+    {
+      "category": "outputs_results",
+      "id": "q4.1_visual_feedback",
+      "question": "What exactly should the user see on screen? Be specific about messages, colors, positions.",
+      "example": "Green toast top-right: 'Added to Cart: [Product Name]' with thumbnail. Cart badge updates.",
+      "follow_ups": [
+        "Should there be animation?",
+        "How prominent should the feedback be?",
+        "Should it auto-dismiss or require user action?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHEN [action], the system SHALL display [specific visual element]"
+      ]
+    },
+    {
+      "category": "validation_rules",
+      "id": "q5.1_business_constraints",
+      "question": "Are there business rules or policies that restrict this action?",
+      "example": "Max 10 of any single item. Max 50 items total in cart. Some items can't be combined.",
+      "follow_ups": [
+        "Why do these limits exist?",
+        "Should there be exceptions (e.g., for VIP users)?",
+        "How should violations be communicated?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHEN user attempts to [action], the system SHALL enforce [rule]"
+      ]
+    },
+    {
+      "category": "validation_rules",
+      "id": "q5.2_compliance_requirements",
+      "question": "Are there legal, regulatory, or compliance requirements? Privacy, accessibility, export restrictions?",
+      "example": "Must get GDPR consent for analytics. Age-restricted items need verification.",
+      "follow_ups": [
+        "Which regions/jurisdictions apply?",
+        "How do we document compliance?",
+        "What auditing is required?"
+      ],
+      "resulting_criteria": [
+        "NFR-X: The system SHALL [compliance requirement]"
+      ]
+    },
+    {
+      "category": "edge_cases",
+      "id": "q6.1_boundary_conditions",
+      "question": "What happens at the extremes? Zero, maximum, first, last, empty, full?",
+      "example": "First item creates cart. Last item triggers low stock warning. Empty cart shows empty state.",
+      "follow_ups": [
+        "What about exactly at the boundary?",
+        "Should behavior change at thresholds?",
+        "Are there cascading effects?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHEN [boundary condition], the system SHALL [specific behavior]"
+      ]
+    },
+    {
+      "category": "edge_cases",
+      "id": "q6.2_temporal_scenarios",
+      "question": "What about time-based scenarios? Expiration, time zones, scheduling, rate limits?",
+      "example": "Cart items expire after 15 minutes if not checked out. Flash sales have start/end times.",
+      "follow_ups": [
+        "How precise does timing need to be?",
+        "What timezone should be used?",
+        "How do we handle clock skew?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHILE [time condition] WHEN [trigger], the system SHALL [behavior]"
+      ]
+    },
+    {
+      "category": "user_experience",
+      "id": "q7.1_loading_progress",
+      "question": "How should the user know something is happening? Loading states, progress indicators?",
+      "example": "Show spinner on Add to Cart button. Disable button to prevent double-clicks.",
+      "follow_ups": [
+        "How long before showing spinner?",
+        "Should there be a timeout message?",
+        "How do we handle slow operations?"
+      ],
+      "resulting_criteria": [
+        "AC-X: WHEN [operation starts], the system SHALL display [loading indicator]"
+      ]
+    },
+    {
+      "category": "user_experience",
+      "id": "q7.2_error_messages",
+      "question": "When errors occur, what should the user see? How can they fix it? Where should messages appear?",
+      "example": "Error message near Add to Cart button, in red, with specific fix like 'Reduce quantity to 5'.",
+      "follow_ups": [
+        "Should we suggest fixes?",
+        "Should there be help links?",
+        "Can users dismiss the message?"
+      ],
+      "resulting_criteria": [
+        "AC-X: IF [error] WHEN [action], the system SHALL display [message] with [fix suggestion]"
+      ]
+    }
+  ]
+}

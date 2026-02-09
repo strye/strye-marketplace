@@ -1,0 +1,22 @@
+{
+  "small": "S (1-4 days): Single component or API endpoint. Well-understood technology. Minimal dependencies. Example: Add filtering to existing list.",
+  "medium": "M (5-10 days): Complete feature or screen. Standard complexity. Some dependencies. Example: Build user profile page (view + edit).",
+  "large": "L (11-15 days): Multiple related features. Higher complexity or new technology. Multiple dependencies. Example: Complete checkout flow (4 steps).",
+  "extra_large": "XL (16+ days): RED FLAG - consider splitting. Only acceptable if feature genuinely cannot be split.",
+  "complexity_factors": {
+    "new_technology": "Add 2-3 days for learning/spike",
+    "external_dependencies": "Add 1-2 days for integration/testing",
+    "high_risk": "Add 2-3 days for proof of concept",
+    "multiple_components": "Add 1 day per additional major component",
+    "performance_requirements": "Add 2-3 days for optimization/testing",
+    "security_critical": "Add 2-3 days for security review/testing"
+  },
+  "adjustment_guidelines": {
+    "experienced_team_same_tech": "Reduce estimate by 20%",
+    "new_team_unfamiliar_tech": "Increase estimate by 30%",
+    "clear_requirements": "Reduce estimate by 10%",
+    "vague_requirements": "Increase estimate by 20%",
+    "well_architected_codebase": "Reduce estimate by 15%",
+    "legacy_codebase": "Increase estimate by 25%"
+  }
+}

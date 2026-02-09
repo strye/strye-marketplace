@@ -1,0 +1,132 @@
+{
+  "heuristics": [
+    {
+      "category": "technical_cohesion",
+      "id": "heuristic_1.1_ui_stories_together",
+      "rule": "If 3+ stories modify the same page/screen/component, group them together",
+      "signals": [
+        "Stories mention same UI location (dashboard, profile page, checkout screen)",
+        "Stories describe different interactions with same visual elements",
+        "Stories share UI state (filters, sorting, selections)",
+        "Stories all require same frontend framework/library"
+      ],
+      "example": {
+        "stories": [
+          "Display product list on catalog page",
+          "Add filtering to product catalog",
+          "Add sorting to product catalog",
+          "Add pagination to product list"
+        ],
+        "grouping": "SPEC-001: Product Catalog UI",
+        "rationale": "All 4 stories work on ProductCatalog component, share state management for filters/sorting/pagination. Single developer can own entire spec."
+      },
+      "effort_impact": "Medium (typically 5-10 days for complete page/screen)"
+    },
+    {
+      "category": "technical_cohesion",
+      "id": "heuristic_1.2_backend_stories_together",
+      "rule": "If 3+ stories modify the same service/API/backend system, group them",
+      "signals": [
+        "Stories describe API endpoints for same resource (user API, product API)",
+        "Stories involve same database tables/entities",
+        "Stories share business logic (pricing calculations, validations)",
+        "Stories require same backend technology (Redis cache, message queue)"
+      ],
+      "example": {
+        "stories": [
+          "Create API endpoint to get user profile",
+          "Create API endpoint to update user profile",
+          "Create API endpoint to delete user account",
+          "Add profile photo upload to user API"
+        ],
+        "grouping": "SPEC-001: User Profile API",
+        "rationale": "All work on UserService, share User model, common auth/validation logic. Defines complete REST API for User resource."
+      },
+      "effort_impact": "Medium (typically 5-8 days for complete API resource)"
+    },
+    {
+      "category": "dependencies",
+      "id": "heuristic_2.1_foundation_first",
+      "rule": "Stories that other stories depend on should be grouped as foundation work",
+      "signals": [
+        "Stories create infrastructure other stories need",
+        "Stories define core models other features use",
+        "Stories set up authentication other features require",
+        "Stories establish patterns other work follows"
+      ],
+      "example": {
+        "stories": [
+          "Create User data model",
+          "Implement JWT authentication",
+          "Create login endpoint",
+          "Create protected route middleware",
+          "User can view their profile (depends on auth)",
+          "User can edit settings (depends on auth)"
+        ],
+        "grouping": "SPEC-001: Auth Foundation (first 4 stories) → SPEC-002: User Features (last 2 stories)",
+        "rationale": "SPEC-001 blocks all other work - must build first. SPEC-002 depends on SPEC-001."
+      },
+      "effort_impact": "Foundation work typically 5-8 days, enables parallel work afterward"
+    },
+    {
+      "category": "parallel_work",
+      "id": "heuristic_3.1_frontend_backend_split",
+      "rule": "For larger features (8+ stories), split frontend and backend for parallel development",
+      "signals": [
+        "Feature large enough (8+ stories) to benefit from 2 developers",
+        "Clear API contract can be defined upfront",
+        "Frontend and backend have different complexity levels",
+        "Team has both frontend and backend specialists"
+      ],
+      "example": {
+        "stories": [
+          "Create Product API endpoints",
+          "Add product search to API",
+          "Add product filtering to API",
+          "Display product grid on catalog",
+          "Implement product search UI",
+          "Add filtering UI"
+        ],
+        "grouping": "SPEC-001: Product API (backend) → SPEC-002: Product Catalog UI (frontend)",
+        "rationale": "Define API contract upfront. Backend and frontend teams work in parallel against contract, reducing calendar time."
+      },
+      "effort_impact": "Reduces calendar time from 3 weeks to 2 weeks with 2 developers"
+    },
+    {
+      "category": "size_balancing",
+      "id": "heuristic_4.1_avoid_extreme_disparity",
+      "rule": "If specs range from 2 days to 20 days, rebalance",
+      "target_distribution": "Most specs in 5-10 day range",
+      "acceptable": "Mix of small (3-5d), medium (5-10d), large (10-15d)",
+      "poor": "One 20-day spec + five 2-day specs",
+      "example": {
+        "initial_grouping": "SPEC-001: User Management (22 days) - TOO LARGE",
+        "rebalanced": "SPEC-001: User Core (8 days) + SPEC-002: User Profile (7 days) + SPEC-003: Admin (7 days)",
+        "rationale": "More predictable delivery, better parallelization"
+      },
+      "effort_impact": "Creates more predictable and manageable specs"
+    },
+    {
+      "category": "risk_isolation",
+      "id": "heuristic_5.1_isolate_high_risk_work",
+      "rule": "Separate high-risk stories from low-risk stories to contain failures",
+      "high_risk_indicators": [
+        "New unfamiliar technology/library",
+        "Third-party dependencies (external APIs)",
+        "Performance requirements (unknown if achievable)",
+        "Security-critical functionality",
+        "Complex algorithms (unknown if approach works)"
+      ],
+      "example": {
+        "stories": [
+          "User can create blog post (2 days - LOW RISK)",
+          "User can edit blog post (2 days - LOW RISK)",
+          "AI generates summaries via GPT-4 (8 days - HIGH RISK - new API)"
+        ],
+        "grouping": "SPEC-001: Blog CRUD (4 days) + SPEC-002: AI Summaries (8 days - isolated)",
+        "rationale": "If AI integration fails, core blog functionality still ships. Timebox experimentation."
+      },
+      "effort_impact": "Protects low-risk work from high-risk blockers"
+    }
+  ]
+}

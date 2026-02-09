@@ -1,0 +1,47 @@
+{
+  "overview": {
+    "section": "1. Overview",
+    "description": "High-level summary of what this spec accomplishes and why",
+    "template": "## 1.1 Objectives\n[What this spec accomplishes and why it exists]\n\n## 1.2 Scope\n[Which user stories (US-X) are included]\n\n## 1.3 Out of Scope\n[What this spec explicitly does NOT cover]"
+  },
+  "requirements": {
+    "section": "2. Requirements",
+    "description": "Reference to all functional, non-functional, and acceptance requirements",
+    "template": "## 2.1 Functional Requirements (FR)\n[List FR-X identifiers from requirements.md]\n\n## 2.2 Non-Functional Requirements (NFR)\n[List NFR-X identifiers from requirements.md]\n\n## 2.3 Acceptance Criteria (AC)\n[List AC-X identifiers in EARS notation]\n\n## 2.4 Dependencies\n- Other specs this depends on\n- External services required\n- Shared components needed"
+  },
+  "solution_architecture": {
+    "section": "3. Solution Design",
+    "description": "High-level architecture and design decisions",
+    "template": "## 3.1 Architecture Overview\n[Mermaid diagram showing main components]\n\n## 3.2 Design Decisions\n[Key choices with rationale]\n\n## 3.3 Technology Stack\n[Specific technologies, frameworks, libraries]"
+  },
+  "components": {
+    "section": "4. Component Specifications",
+    "description": "Detailed component design with requirement traceability",
+    "template": "### 4.X [Component Name]\n\n**Satisfies:** [FR-X, AC-Y, NFR-Z]\n**Purpose:** [Link to requirements]\n\n**Requirement References:**\n_References FR-X_: \"[Requirement text]\"\n→ [How component addresses it]\n\n**Interface Specification:**\n[Interface code with type annotations]\n\n**Dependencies:**\n[What this component needs]\n\n**Error Handling:**\n[Exception types, error responses]"
+  },
+  "data_models": {
+    "section": "5. Data Models",
+    "description": "Entity definitions and data flow",
+    "template": "## 5.1 Entity Definitions\n[Entity-relationship diagrams (Mermaid)]\n[Table schemas or document structures]\n\n## 5.2 Data Flow\n[How data moves through the system]\n\n## 5.3 Data Validation\n[Validation rules linked to AC criteria]"
+  },
+  "api_specs": {
+    "section": "6. API Specifications",
+    "description": "Endpoint definitions and contracts",
+    "template": "## 6.1 Endpoints\nFor each endpoint:\n- Method and path\n- Request schema\n- Response schema\n- Error responses\n- Which AC/FR it satisfies\n\n## 6.2 Authentication & Authorization\n[How endpoints are secured]\n\n## 6.3 Rate Limiting & Throttling\n[If applicable]"
+  },
+  "sequence_diagrams": {
+    "section": "7. Sequence Diagrams",
+    "description": "Key flow visualizations",
+    "template": "## 7.X [Flow Name]\n[Mermaid sequence diagram]\n[Reference to AC criteria being satisfied]"
+  },
+  "testing_strategy": {
+    "section": "8. Testing Strategy",
+    "description": "How to validate requirements",
+    "template": "## 8.1 Unit Testing\n[What needs unit tests]\n\n## 8.2 Integration Testing\n[Integration points to test]\n\n## 8.3 Acceptance Testing\n[How to validate each AC]\n[Test case mapping: AC-X → TC-Y]\n\n## 8.4 Performance Testing\n[How to validate NFR requirements]"
+  },
+  "traceability_matrix": {
+    "section": "10. Requirement Traceability Matrix",
+    "description": "Complete traceability from requirements to components",
+    "template": "| Requirement ID | Type | Component(s) | Interface/Method | Validated By |\n|---|---|---|---|---|\n| FR-1 | Functional | ComponentName | methodName() | Test case |\n| AC-5 | Acceptance | Component1 + Component2 | methods | Test case |\n| NFR-1 | Performance | CacheLayer | get/set | Load test |\n\n**Coverage Summary:**\n- Functional Requirements: X/Y addressed (Z%)\n- Acceptance Criteria: X/Y addressed (Z%)\n- Non-Functional Requirements: X/Y addressed (Z%)"
+  }
+}

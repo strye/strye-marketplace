@@ -1,0 +1,65 @@
+{
+  "error_handling": [
+    "What happens if [input] is missing or invalid?",
+    "How do we handle [external service] being unavailable?",
+    "What's the recovery path for [failure scenario]?",
+    "Should we retry automatically or ask user?",
+    "What gets logged for debugging?"
+  ],
+  "validation": [
+    "What makes [input] valid vs invalid?",
+    "Should validation happen in real-time or on submit?",
+    "What constraints apply to [field]?",
+    "Are there cross-field validation rules?",
+    "How do users know what's valid?"
+  ],
+  "edge_cases": [
+    "What happens with empty/null values?",
+    "What about maximum limits (100, 1000, 1M)?",
+    "What if two users modify the same data?",
+    "How do we handle very slow operations?",
+    "What about timezone differences?"
+  ],
+  "security": [
+    "Who is allowed to perform this action?",
+    "What data needs to be encrypted?",
+    "Should we rate-limit this operation?",
+    "Are there audit/compliance requirements?",
+    "How do we prevent abuse?"
+  ],
+  "performance": [
+    "How fast should this operation complete?",
+    "What's the expected data volume?",
+    "How many concurrent users?",
+    "Should we cache anything?",
+    "Are there peak usage times?"
+  ],
+  "accessibility": [
+    "Can screen readers use this feature?",
+    "Is keyboard navigation supported?",
+    "Are colors used for status (accessibility issue)?",
+    "Is the UI mobile-friendly?",
+    "Do users need help understanding this?"
+  ],
+  "data_lifecycle": [
+    "How long should this data persist?",
+    "What happens when data expires?",
+    "Should users be able to delete data?",
+    "Are there backup/recovery requirements?",
+    "Should data be archived?"
+  ],
+  "integration": [
+    "Does this integrate with other systems?",
+    "What happens if integration fails?",
+    "Should the operation fail or degrade gracefully?",
+    "How do we keep systems in sync?",
+    "What's the retry strategy?"
+  ],
+  "user_experience": [
+    "What feedback should users get?",
+    "How long can users wait for a response?",
+    "Should we show progress for long operations?",
+    "How do users recover from errors?",
+    "Is there any confirmation needed?"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "workflow": "Epic → Feature → Spec → Design → Tasks → Sync\n\n1. /specid.epic (optional) - Create strategic initiatives (EPIC-NNN)\n2. /specid.feature - Create features with user stories (FEAT-NNN)\n3. /specid.prepare - Break features into specs (NNN-spec-name)\n4. /specid.design - Create technical designs\n5. /specid.tasks - Generate implementation tasks\n6. /specid.sync - Sync status across documents",
+  "naming_conventions": "Epics: EPIC-001, EPIC-002 (padded 3 digits)\nFeatures: FEAT-001, FEAT-002 (padded 3 digits)\nSpecs: 001-spec-name, 002-spec-name (padded 3 digits)\nRequirements: FR-X (Functional), NFR-X (Non-Functional), AC-X (Acceptance), US-X (User Stories)",
+  "numbering_system": "Sequential, zero-padded to 3 digits\nFormat: [PREFIX]-[NUMBER]-[kebab-case-name]\nExample: EPIC-001-user-management, FEAT-002-authentication, 003-login-page",
+  "status_values": "Draft → Ready → In Progress → Done / Blocked\nStatus flows bottom-up: Tasks → Specs → Features → Epics",
+  "requirement_types": "FR-X: Functional Requirements (what system does)\nNFR-X: Non-Functional Requirements (quality attributes)\nAC-X: Acceptance Criteria (testable conditions, EARS notation)\nUS-X: User Stories (from feature file)"
+}

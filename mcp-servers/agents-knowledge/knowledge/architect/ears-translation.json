@@ -1,0 +1,65 @@
+{
+  "patterns": [
+    {
+      "ears_format": "WHEN [trigger], the system SHALL [response]",
+      "component_type": "Event Handler",
+      "mapping_steps": [
+        "Extract trigger type (button click, API call, time event, etc.)",
+        "Identify response required (create, update, display, redirect, etc.)",
+        "Determine if response is simple (single component) or complex (multiple components)",
+        "Define component interfaces for trigger reception and response execution"
+      ],
+      "example": {
+        "ears_criterion": "AC-1: WHEN user clicks 'Submit' button, the system SHALL validate form inputs and display results",
+        "components": [
+          {
+            "name": "SubmitButtonHandler",
+            "responsibility": "Capture click event and initiate validation",
+            "interface": "onClick(): void"
+          },
+          {
+            "name": "FormValidationService",
+            "responsibility": "Validate inputs against rules",
+            "interface": "validate(formData: FormData): ValidationResult"
+          },
+          {
+            "name": "ValidationResultsDisplay",
+            "responsibility": "Render validation results to user",
+            "interface": "show(results: ValidationResult): void"
+          }
+        ]
+      }
+    },
+    {
+      "ears_format": "IF [condition] WHEN [trigger], the system SHALL [response]",
+      "component_type": "Guard or Validator",
+      "mapping_steps": [
+        "Extract condition (what state must be true)",
+        "Extract trigger (what event starts the check)",
+        "Extract response (what to do if condition met)",
+        "Design Guard component to check condition",
+        "Design Handler to execute response"
+      ],
+      "example": {
+        "ears_criterion": "AC-5: IF user is not authenticated WHEN accessing protected resource, the system SHALL redirect to login",
+        "components": [
+          {
+            "name": "AuthenticationService",
+            "responsibility": "Check if user is authenticated",
+            "interface": "isAuthenticated(): boolean"
+          },
+          {
+            "name": "RouteGuard",
+            "responsibility": "Intercept access and check auth",
+            "interface": "canAccess(resource: Resource): boolean"
+          },
+          {
+            "name": "NavigationService",
+            "responsibility": "Redirect to login",
+            "interface": "redirectToLogin(returnUrl: string): void"
+          }
+        ]
+      }
+    }
+  ]
+}

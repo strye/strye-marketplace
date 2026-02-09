@@ -1,0 +1,39 @@
+{
+  "requirement_completeness": [
+    "Happy path defined",
+    "Error conditions identified",
+    "Edge cases considered",
+    "Validations specified",
+    "Data requirements clear",
+    "User experience expectations set",
+    "Success criteria measurable"
+  ],
+  "design_quality": [
+    "All AC criteria mapped to components",
+    "EARS triggers translated to interface methods",
+    "NFR requirements addressed with design strategies",
+    "Requirement traceability matrix complete",
+    "Test strategy maps each AC to test case",
+    "Sequence diagrams show complete flows",
+    "100% requirement coverage"
+  ],
+  "spec_breakdown_quality": [
+    "Every user story assigned to exactly one spec",
+    "All dependencies identified and documented",
+    "Spec sizes balanced (no huge + tiny disparity)",
+    "Implementation order logical (foundation first)",
+    "High-risk work isolated from low-risk work",
+    "Parallel work opportunities identified",
+    "Each spec has clear, descriptive name",
+    "Rationale provided for every grouping decision"
+  ],
+  "traceability_validation": [
+    "Every FR-X identifier mapped to at least one component",
+    "Every NFR-X identifier mapped to design strategy",
+    "Every AC-X identifier mapped to specific interface/method",
+    "Traceability matrix shows 100% coverage",
+    "Component specifications reference their requirements",
+    "Orphaned components justified or removed",
+    "Test cases reference the AC/FR they validate"
+  ]
+}
