@@ -19,6 +19,11 @@
       "name": "content-creator",
       "source": "./plugins/content-creator",
 	  "description": "A set of tools to help make better professional content"
+    },
+    {
+      "name": "forecast-research",
+      "source": "./plugins/forecast-research",
+      "description": "A comprehensive research plugin for domain-specific internet exploration, content aggregation, and daily forecasting summaries. Automatically discovers and tracks relevant articles, news, and content across configurable domains with intelligent deduplication."
     }
   ]
 }

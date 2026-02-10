@@ -1,0 +1,49 @@
+{
+  "storageDirectory": "./forecast-research-content",
+  "domains": [
+    {
+      "id": "ai-trends",
+      "name": "AI & Machine Learning Trends",
+      "keywords": ["artificial intelligence", "machine learning", "deep learning", "neural networks", "large language models", "AI research"],
+      "searchMode": "broad",
+      "sourcePreferences": ["news", "academic", "blogs", "forums"],
+      "updateFrequency": "daily",
+      "enabled": true
+    },
+    {
+      "id": "climate-science",
+      "name": "Climate Science & Sustainability",
+      "keywords": ["climate change", "renewable energy", "carbon emissions", "climate science", "sustainability"],
+      "searchMode": "news",
+      "sourcePreferences": ["news", "scientific"],
+      "updateFrequency": "daily",
+      "enabled": true
+    },
+    {
+      "id": "biotech",
+      "name": "Biotechnology & Healthcare",
+      "keywords": ["biotechnology", "gene therapy", "precision medicine", "drug development", "medical research"],
+      "searchMode": "indepth",
+      "sourcePreferences": ["academic", "news", "research"],
+      "updateFrequency": "weekly",
+      "enabled": true
+    }
+  ],
+  "deduplication": {
+    "strategy": "url",
+    "trackingFile": ".forecast-tracking/url-tracking.json",
+    "cleanupOldEntriesAfterDays": 90
+  },
+  "research": {
+    "maxResultsPerDomain": 20,
+    "maxArticlesPerSearch": 50,
+    "retryFailedRequests": 3,
+    "requestTimeoutSeconds": 30
+  },
+  "summary": {
+    "generateDailyAt": "09:00",
+    "includeTopicsSummary": true,
+    "includeKeyInsights": true,
+    "outputDirectory": "./forecast-research-content/daily-summaries"
+  }
+}

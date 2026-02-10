@@ -1,0 +1,42 @@
+{
+  "name": "forecast-research",
+  "displayName": "Forecast Research",
+  "version": "1.0.0",
+  "description": "A comprehensive research plugin for domain-specific internet exploration, content aggregation, and daily forecasting summaries. Automatically discovers and tracks relevant articles, news, and content across configurable domains.",
+  "author": "Strye",
+  "repository": "https://github.com/anthropics/claude-code",
+  "commands": [
+    {
+      "name": "forecast.research",
+      "description": "Initiate a domain-specific research session to discover and collect relevant content"
+    },
+    {
+      "name": "forecast.config",
+      "description": "Configure research domains, sources, and storage settings"
+    },
+    {
+      "name": "forecast.status",
+      "description": "Check the status of research activities and content collection"
+    }
+  ],
+  "agents": [
+    {
+      "name": "research-agent",
+      "description": "Autonomous agent that explores the internet for domain-specific content and manages deduplication"
+    },
+    {
+      "name": "summary-agent",
+      "description": "Creates daily summaries from collected research content across domains"
+    }
+  ],
+  "skills": [
+    {
+      "name": "content-fetcher",
+      "description": "Fetches and validates web content for research"
+    },
+    {
+      "name": "dedup-manager",
+      "description": "Manages URL deduplication and content storage"
+    }
+  ]
+}
