@@ -1,7 +1,6 @@
 ---
 name: safe-file-reader
 description: Read files without making changes. Use when you need read-only file access.
-allowed-tools: Read, Grep, Glob
 ---
 
 # Safe File Reader

@@ -1,0 +1,10 @@
+{
+  "projectDir": "/absolute/path/to/your/project",
+  "linkTarget": "content/",
+  "symLinks": [
+    {
+      "source": "/absolute/path/to/knowledge-repo-folder",
+      "target": "link-name-in-project"
+    }
+  ]
+}
