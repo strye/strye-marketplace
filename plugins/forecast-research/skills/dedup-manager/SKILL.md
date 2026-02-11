@@ -1,3 +1,8 @@
+---
+name: dedup-manager
+description: Manages URL deduplication and prevents duplicate article downloads in the forecast research system.
+---
+
 # Dedup Manager Skill
 
 Manages URL deduplication and prevents duplicate article downloads in the forecast research system.
@@ -100,7 +105,6 @@ Located at: `.forecast-tracking/url-tracking.json`
       "source": "scientific",
       "contentLength": 3256
     }
-    // ... more URLs
   }
 }
 ```
@@ -226,20 +230,12 @@ if (!dedup.isUrlTracked('https://example.com/article')) {
     title: 'AI Breakthrough',
     contentLength: 2547
   });
-  console.log('✓ Article tracked');
+  console.log('Article tracked');
 } else {
-  console.log('⊗ URL already tracked - skipping');
+  console.log('URL already tracked - skipping');
 }
 
 // Get stats
 const stats = dedup.getStats('ai-trends');
 console.log(`AI Trends: ${stats.domainUrls} unique articles`);
 ```
-
-## Benefits
-
-✓ **Prevents Duplicate Work**: No redundant fetches or storage
-✓ **Bandwidth Efficiency**: Saves bandwidth by skipping known URLs
-✓ **Storage Optimization**: Prevents duplicate file creation
-✓ **Tracking Transparency**: Full audit trail of what's been collected
-✓ **Easy Recovery**: Can export and analyze deduplication patterns

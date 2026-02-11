@@ -8,11 +8,12 @@ This is a Claude plugin marketplace containing a collection of plugins for exten
 
 ## Marketplace Structure
 
-The repository contains three main plugins:
+The repository contains four plugins:
 
-- **spec-claude**: A spec-driven development (SDD) plugin that follows the kiro project structure and methodology
 - **content-creator**: A set of tools to help make better professional content
-- **my-first-plugin**: A simple greeting plugin used as a learning template
+- **forecast-research**: A comprehensive research plugin for domain-specific internet exploration, content aggregation, and daily forecasting summaries
+- **integrated-design-spec**: A comprehensive spec-driven development (SDD) plugin with three-tier specification hierarchy (Epic, Feature, User Story) and intelligent agents for architecture review and validation
+- **writing-assistant**: Provides writing assistance for writing workflows including a special co-author agent for fiction, manuscript management, grammar checking, and research tools
 
 ### Plugin Architecture
 

@@ -1,3 +1,8 @@
+---
+name: content-fetcher
+description: Fetches and validates web content for research articles, handling network operations, error recovery, and content quality checks.
+---
+
 # Content Fetcher Skill
 
 Fetches and validates web content for research articles, handling network operations, error recovery, and content quality checks.
@@ -306,7 +311,7 @@ const result = await fetcher.fetchContent(
 );
 
 if (result.success) {
-  console.log(`✓ Fetched: ${result.title}`);
+  console.log(`Fetched: ${result.title}`);
   console.log(`  Author: ${result.author}`);
   console.log(`  Length: ${result.contentLength} bytes`);
   console.log(`  Read time: ${result.readTime} minutes`);
@@ -318,6 +323,6 @@ if (result.success) {
     // Proceed with storage
   }
 } else {
-  console.log(`✗ Failed: ${result.error}`);
+  console.log(`Failed: ${result.error}`);
 }
 ```
